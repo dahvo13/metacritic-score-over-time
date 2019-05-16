@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 ap = argparse.ArgumentParser()
 ap.add_argument("-y", "--years", nargs='+', required=True,
 	help="""
-        List of years to get data for.
+        Space-separated list of years to get data for.
         Should obvoiously only contain years that Metacritic has data for.
     """)
 ap.add_argument("-p", "--platform", required=True,
@@ -35,6 +35,12 @@ def get_game_score_over_years(platform, years):
         print('Checking number of pages for year {}'.format(year))
         r = requests.get(url, headers=headers)
         soup = BeautifulSoup(r.content, 'html.parser')
+
+        no_data = soup.find('p', {'class': 'no_data'})
+        if no_data is not None and 'No Results Found' in no_data:
+            print('The {} platform has no data for year {}'.format(platform, year))
+            print()
+            continue
 
         pages = soup.find('li', {'class': 'page last_page'})
         if pages is None:
@@ -69,7 +75,6 @@ def get_game_score_over_years(platform, years):
                         continue
                     score = float(BeautifulSoup.renderContents(score))
                     values.append(score)
-            print()
 
         avg = sum(values) / len(values)
         total[year] = avg
@@ -84,12 +89,17 @@ def plot_data(boxplot_data, graph_data):
     labels, data = [*zip(*boxplot_data.items())]
     plt.boxplot(data)
     plt.xticks(range(1, len(labels) + 1), labels)
-
+    plt.title(args['platform'])
+    plt.xlabel('Years')
+    plt.ylabel('Score')
     fig.show()
 
     gig = plt.figure(2, figsize=(9, 6))
     plt.bar(range(len(total)), list(total.values()), align='center')
     plt.xticks(range(len(total)), list(total.keys()))
+    plt.title(args['platform'])
+    plt.xlabel('Years')
+    plt.ylabel('Score')
     gig.show()
 
     # to force the two images to keep being open
