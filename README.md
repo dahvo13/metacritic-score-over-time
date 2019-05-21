@@ -19,7 +19,7 @@ This project requries python 3.
 Requirements for this script are installed via Pip.
 
 ```sh
-pip3 install -fr requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Running the script
